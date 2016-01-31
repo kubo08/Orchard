@@ -1,0 +1,62 @@
+@using Softea.DirectoryServices.ViewModels;
+@model Softea.DirectoryServices.ViewModels.LdapDirectoriesIndexViewModel
+@{
+    Layout.Title = T("LDAP Directories").ToString();
+}
+
+@using (Html.BeginFormAntiForgeryPost()) { 
+    @Html.ValidationSummary()
+    <div class="manage">@Html.ActionLink(T("Add a new directory").ToString(), "Create", new { }, new { @class = "button primaryAction" })</div>
+
+    <fieldset class="bulk-actions">
+        @Html.TextBoxFor(m => m.Options.Search, new { @class = "text" })        
+        <label for="filterResults">@T("Filter:")</label>
+        <select id="filterResults" name="@Html.NameOf(m => m.Options.Filter)">
+            @Html.SelectOption(Model.Options.Filter, LdapDirectoriesFilter.All, T("All Directories").ToString())
+            @Html.SelectOption(Model.Options.Filter, LdapDirectoriesFilter.Enabled, T("Enabled Directories").ToString())
+            @Html.SelectOption(Model.Options.Filter, LdapDirectoriesFilter.Disabled, T("Disabled Directories").ToString())
+        </select>
+
+        <button type="submit" name="submit.Filter" value="@T("Filter")">@T("Filter")</button>
+    </fieldset>
+    <fieldset>
+        <table class="items">
+            <thead>
+                <tr>
+                    <th scope="col">@T("Name")</th>
+                    <th scope="col">@T("Server")</th>
+                    <th scope="col">@T("Actions")</th>
+                </tr>
+            </thead>
+            @foreach (var entry in Model.LdapDirectories) { 
+                if (entry.Name != null) { 
+            <tr>
+                <td>
+                    @if (entry.Enabled) { 
+                    <img class="icon" src="@Href("~/Modules/Orchard.Users/Content/Admin/images/online.gif")" alt="@T("Enabled")" title="@T("Directory is enabled")" /> 
+                    } else { 
+                    <img class="icon" src="@Href("~/Modules/Orchard.Users/Content/Admin/images/offline.gif")" alt="@T("Disabled")" title="@T("Directory is disabled")" />
+                    } 
+                    @Html.ActionLink(entry.Name, "Edit", new { entry.Id }) 
+                </td>
+                <td>
+                    @entry.Server 
+                </td>
+                <td>
+                    @Html.ActionLink(T("Edit").ToString(), "Edit", new { entry.Id }) |
+                    @Html.ActionLink(T("Delete").ToString(), "Delete", new { entry.Id}, new { itemprop = "RemoveUrl UnsafeUrl" }) |
+                    @if (!entry.Enabled) {
+                        @Html.ActionLink(T("Enable").ToString(), "Enable", new { entry.Id }, new { itemprop = "UnsafeUrl" })
+                    } else {
+                        @Html.ActionLink(T("Disable").ToString(), "Disable", new { entry.Id }, new { itemprop = "UnsafeUrl" })
+                    }
+                </td>
+            </tr>
+                }
+            }
+        </table>
+
+    @Display(Model.Pager)
+
+    </fieldset>
+} 

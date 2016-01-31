@@ -1,0 +1,11 @@
+﻿Name: Related Content
+AntiForgery: enabled
+Author: Softea
+Website: http://orchardproject.net
+Version: 1.9.2
+OrchardVersion: 1.9
+Description: Enables finding related content
+Features:
+    Softea.RelatedContent:
+        Description: Finds links to current content item
+		Category: AgroBioTech

@@ -1,0 +1,130 @@
+﻿@model Softea.RelatedContent.ViewModels.PropertyFieldsViewModel
+@{
+    Style.Include("RelatedContent.css", "RelatedContent.min.css");
+    Script.Require("jQuery");
+    Script.Require("jQueryUI_Core");
+    using (Script.Foot()) {
+        
+        <script type="text/javascript">
+            $(document).on('click', '#Remove', function () {
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                var RelatedData = GetData();
+                var preffix = GetPreffix();
+                var id = $(this).attr("class");
+                $.ajax(
+                {
+                    cache: false,
+                    type:
+                        "POST",
+                    url:
+                        '@Url.Action("Index", "RelatedContent", new{ area="Softea.RelatedContent"})',
+                    datatype:'json',
+                    data:
+                    {
+                        __RequestVerificationToken:
+                            token,
+                        data: RelatedData,
+                        removeID: id,
+                        preffix:preffix
+                    },
+                    success:
+                        function (data, status) {
+                            $('#relatedContentFields').html(data);
+                        },
+                    error:
+                        function (data) {
+                            console.log(data);
+                            $('#relatedContentFields').html("Vyskytla sa chyba");
+                        }
+                });
+            });
+            $(document).on("click", '#Add', function() {
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                var relatedData = GetData();
+
+                var preffix = GetPreffix();
+                $.ajax(
+                {
+                    cache: false,
+                    type:
+                        "POST",
+                    url:
+                        '@Url.Action("Index", "RelatedContent", new { area = "Softea.RelatedContent", model=Model })',
+                    data:
+                    {
+                        __RequestVerificationToken:
+                            token,
+                        data: relatedData,
+                        add: 'true',
+                        preffix: preffix
+                    },
+                    success:
+                        function (data, status) {
+                            $('#relatedContentFields').html(data);
+                        },
+                    error:
+                        function (data) {
+                            console.log(data);
+                            $('#relatedContentFields').html("Vyskytla sa chyba");
+                        }
+                });
+            });
+
+            function GetData() {
+                var fields = [];
+                var count = $("input[name$='FieldsCount']").val();
+                for (var i = 0; i < count; i++) {
+                    var item = {};
+                    item['DisplayName'] = $("input[name$='Fields[" + i + "].DisplayName']").val();
+                    item['RelatedcontentType'] = $("select[name$='Fields[" + i + "].RelatedcontentType']").val();
+                    item['RelatedContentFields'] = $("input[name$='Fields[" + i + "].RelatedContentFields']").val();
+
+                    fields[i] = item;
+                }
+                var data = {}
+                data['Fields'] = fields;
+                return data;
+            }
+
+            function GetPreffix() {
+
+                var preffix = $("input[name$='Fields[0].DisplayName']").attr('name');
+                var index = preffix.indexOf('Fields[0].DisplayName');
+                preffix = preffix.substring(0, index);
+                return preffix;
+            }
+        </script>
+    }
+}
+
+
+<fieldset>
+    <div id="fields" class="relatedContent">
+        <div class="link" style="float:right">
+            <span id="Add">Add</span>
+        </div>
+        <br style="clear:both;" />
+        <div id="relatedContentFields">
+            @*@Html.Action("Index", "RelatedContent", new { area = "Softea.RelatedContent", data=Model })*@
+            @Html.Hidden("FieldsCount", Model.Fields.Count)
+            @for (int i = 0; i < Model.Fields.Count; i++)
+            {
+                <div style="float:left; width:90%;">
+                        @Html.DropDownListFor(m => m.Fields[i].RelatedcontentType, Model.Fields[i].possibleContentTypesListItems, "Select content type")
+                        @Html.ValidationMessageFor(m => m.Fields[i].RelatedcontentType)
+                        @T("Field in content type:")
+                        @Html.TextBoxFor(m => m.Fields[i].RelatedContentFields)
+                        @T("Display name:")
+                        @Html.TextBoxFor(m => m.Fields[i].DisplayName)
+                </div>
+
+                <div class="link" style="float:right">
+                    <span class="@i" id="Remove">Remove</span>
+                </div>
+
+                <br style="clear:both;" />
+            }
+        </div>
+    </div>
+</fieldset>

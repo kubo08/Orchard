@@ -1,0 +1,12 @@
+﻿Name: Resource Form
+AntiForgery: enabled
+Author: Softea
+Website: http://orchardproject.net
+Version: 1.9.2
+OrchardVersion: 1.9
+Description: Enables creating content items in form
+Features:
+    Softea.ResourceForm:
+        Description: Enables creating content items in form
+		Category: AgroBioTech
+		dependencies: Dolph.SmartContentPicker, Orchard.Email, Orchard.Localization, Orchard.contentPicker, Orchard.Fields

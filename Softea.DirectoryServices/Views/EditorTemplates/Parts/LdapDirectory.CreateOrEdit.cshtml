@@ -1,0 +1,170 @@
+﻿@using System.Security.Policy
+@using Softea.DirectoryServices.Models
+@model Softea.DirectoryServices.Models.LdapDirectoryPart
+@{
+    var prefix = ViewData.TemplateInfo.HtmlFieldPrefix;
+    var isServiceAccountPasswordEmpty = Model.ContentItem.Record == null || string.IsNullOrEmpty(Model.Record.ServiceAccountPassword);
+
+    // WORKAROUND: unfortunately there's no localized version of DataAnnotationsModelMetadataProvider
+    // like LocalizedModelValidatorProvider of DataAnnotationsModelValidatorProvider, so we use this workaround
+    // to keep localization consistent
+    var tModel = Orchard.Localization.LocalizationUtilities.Resolve(WorkContext, typeof(LdapDirectoryPart).FullName);
+    var tLdapServer = Orchard.Localization.LocalizationUtilities.Resolve(WorkContext, typeof(LdapServer).FullName);
+
+    using (Script.Foot())
+    {
+        <script type="text/javascript">
+            $('#Update').on('click', function () {
+                $('#Update').attr("disabled", true);
+                var id = $('#LdapDirectory_directoryId').val();
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: '@Url.Action("Update", "ActiveDirectory")',
+                    data: {
+                        __RequestVerificationToken: token,
+                        Id: id
+                    },
+                    success: function (data, status) {
+                        if (data.toLowerCase() >= 0) {
+                            $('#result').html("Active dirrectory synchronization was updated. Number of users: " + data);
+                        } else {
+
+                            $('#result').html("Error occured in starting active directory synchronization.");
+                        }
+                        $('#Update').attr("disabled", false);
+                    },
+                    error: function (data) {
+                        $('#result').html("Error occured in starting active directory synchronization.");
+                        $('#Update').attr("disabled", false);
+                    }
+                });
+            });
+
+        </script>
+    }
+}      
+
+
+     
+<fieldset>
+    <legend>@T("General Attributes")</legend>
+    <div>
+        @Html.LabelFor(m => m.Name, tModel(LdapDirectoryPart.NameDisplayName))
+        @Html.TextBoxFor(m => m.Name, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.Name, "*")
+    </div>
+</fieldset>
+<fieldset>
+    <legend>@T("Server Parameters")</legend>
+    <div>
+        @Html.LabelFor(m => m.Server.Host, tLdapServer(LdapServer.HostDisplayName))
+        @Html.TextBoxFor(m => m.Server.Host, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.Server.Host, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.Server.Port, tLdapServer(LdapServer.PortDisplayName))
+        @Html.TextBoxFor(m => m.Server.Port, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.Server.Port, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.Server.UseUdp, tLdapServer(LdapServer.UseUdpDisplayName))
+        @Html.DropDownListFor(m => m.Server.UseUdp, new List<SelectListItem> { 
+            new SelectListItem { Value = bool.FalseString, Text = T("TCP").ToString() }, 
+            new SelectListItem { Value = bool.TrueString, Text = T("UDP").ToString() } 
+        })
+        @Html.ValidationMessageFor(m => m.Server.UseUdp, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.Server.UseSsl, tLdapServer(LdapServer.UseSslDisplayName))
+        @Html.CheckBoxFor(m => m.Server.UseSsl)
+        @Html.ValidationMessageFor(m => m.Server.UseSsl, "*")
+    </div>
+</fieldset>
+<fieldset>
+    <legend>@T("Schema Attributes")</legend>
+    <div>
+        @Html.LabelFor(m => m.UserObjectClass, tModel(LdapDirectoryPart.UserObjectClassDisplayName))
+        @Html.TextBoxFor(m => m.UserObjectClass, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserObjectClass, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.UserNameAttribute, tModel(LdapDirectoryPart.UserNameAttributeDisplayName))
+        @Html.TextBoxFor(m => m.UserNameAttribute, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserNameAttribute, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.UserEmailAttribute, tModel(LdapDirectoryPart.UserEmailAttributeDisplayName))
+        @Html.TextBoxFor(m => m.UserEmailAttribute, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserEmailAttribute, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.UserPasswordAttribute, tModel(LdapDirectoryPart.UserPasswordAttributeDisplayName))
+        @Html.TextBoxFor(m => m.UserPasswordAttribute, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserPasswordAttribute, "*")
+    </div>
+</fieldset>
+<fieldset>
+    <legend>@T("Functional Settings")</legend>    
+    <div>
+        @Html.LabelFor(m => m.BaseDn, tModel(LdapDirectoryPart.BaseDnDisplayName))
+        @Html.TextBoxFor(m => m.BaseDn, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.BaseDn, "*")
+    </div>
+    <div>
+        <span class="hint">@T("Specifies the root of the subtree which user lookup operations are performed in.")</span>
+    </div>
+    <div>
+        @Html.LabelFor(m => m.UserFilter, tModel(LdapDirectoryPart.UserFilterDisplayName))
+        @Html.TextBoxFor(m => m.UserFilter, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserFilter, "*")
+    </div>
+    <div>
+        <span class="hint">@T("By specifying an LDAP search filter, you can set limitations on the scope of users who can log in to the site. " +
+            "However, lookup of the user object cannot be avoided in this case.")</span>
+    </div>
+    <div>
+        @Html.LabelFor(m => m.UserObjectCategory, tModel(LdapDirectoryPart.UserObjectCategoryDisplayName))
+        @Html.TextBoxFor(m => m.UserObjectCategory, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserObjectCategory, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.UserMemberOf, tModel(LdapDirectoryPart.UserMemberOfDisplayName))
+        @Html.TextBoxFor(m => m.UserMemberOf, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.UserMemberOf, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.ServiceAccountUserName, tModel(LdapDirectoryPart.ServiceAccountUserNameDisplayName))
+        @Html.TextBoxFor(m => m.ServiceAccountUserName, new { @class = "textMedium" })
+        @Html.ValidationMessageFor(m => m.ServiceAccountUserName, "*")
+    </div>
+    <div>
+        @Html.LabelFor(m => m.ServiceAccountPassword, tModel(LdapDirectoryPart.ServiceAccountPasswordDisplayName))
+        @Html.PasswordFor(m => m.ServiceAccountPassword, new
+   {
+       @class = "textMedium",
+       onfocus = "this.select();",
+       onchange = "document.getElementById('" + prefix + ".ServiceAccountPasswordChanged').value = 1;",
+       value = isServiceAccountPasswordEmpty ? null : "**********"
+   })
+        @Html.ValidationMessageFor(m => m.ServiceAccountPassword, "*")
+        
+        <input id="@(prefix).ServiceAccountPasswordChanged" name="@(prefix).ServiceAccountPasswordChanged" type="hidden" />
+    </div>
+    <div>
+        <span class="hint">@T("Service user account is used when a user object needs to be looked up. " +
+                              "Thus, service user must have read permissions in the specified subtree.")</span><br />
+        <span class="hint">@T("Note: leave the service user name and password fields empty if you want to use anonymous bind to the LDAP directory.")</span>
+    </div>
+</fieldset>
+<fieldset>
+    <legend>@T("Synchronization")</legend>
+    <div>    
+        @Html.LabelFor(m=>m.UpdatePeriod)
+        @Html.EditorFor(m => m.UpdatePeriod)
+        <button type="button" value="Update Now" id="Update">Update Now</button>
+        <span id="result"></span>
+        @Html.Hidden("directoryId", Model.Id)
+    </div>
+</fieldset>

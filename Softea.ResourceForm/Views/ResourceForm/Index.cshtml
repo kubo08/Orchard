@@ -1,0 +1,252 @@
+﻿@using Softea.ResourceForm.ViewModels
+@model ResourceRequestViewModel
+
+@{
+    Style.Include("ResourceForm.min.css");
+    Script.Require("jQuery");
+    Script.Require("jQueryUI_Core");
+    using (Script.Foot())
+    {
+        <script type="text/javascript">
+    $('#ResourceToAdd_ResourceType').change(function () {
+        var selectedValue = $('#ResourceToAdd_ResourceType').val();
+        var form = $('#__ResourceRequestForm');
+        var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+        $('#dropDownLoader').html("<img src='" + '@Url.Content("~/Modules/Softea.ResourceForm/Styles/images/loader.gif")' + "' />");
+        $('#ResourceToAdd_ResourceName').prop("disabled", true);
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("ResourceTypeChanged", "ResourceForm")',
+                    data: {
+                        __RequestVerificationToken: token,
+                        selection: selectedValue
+                    },
+                    success: function (data, status) {
+                        var select = $('#ResourceToAdd_ResourceName');
+                        select.html("");
+                        $.each(data, function (val, text) {
+                            select.append(
+                                $('<option></option>').val(text.Value).html(text.Text)
+                            );
+                        });
+                        if (data.length == 0) {
+                            $('#AddResource').prop("disabled", true);
+                        } else {
+                            $('#AddResource').prop("disabled", false);
+                        }
+                        $('#ResourceToAdd_ResourceName').prop("disabled", false);
+                        $('#dropDownLoader').html("");
+                    },
+                    error: function (data) {
+
+                        //todo: informovat o zlyhani
+                        console.log(data);
+                        $('#ResourceToAdd_ResourceName').prop("disabled", false);
+                        $('#dropDownLoader').html("");
+                    }
+                });
+            });
+            $('#__ResourceRequestForm').on("click", '#RemoveResource', function () {
+                $(this).append('<input type="hidden" name="RemoveId" value="' + this.className + '" >');
+            });
+
+        </script>
+    }
+}
+
+<div class="content-localization">
+    <div class="content-localizations">
+        <h4>@T("Translations:")</h4>
+        <ul class="localizations">
+            @foreach (var _ in Model.AvailableLanguages.Select((culture, index) => new { culture, index }))
+            {
+                <li>
+                    @switch (_.culture)
+                    {
+                        case "sk-SK":
+                            @Html.ActionLink("Slovenčina", "Index", "ResourceForm", new { culture = _.culture }, null)
+                            break;
+                        case "en-US":
+                        @Html.ActionLink("English", "Index", "ResourceForm", new { culture = _.culture }, null)
+                            break;
+                        default:
+                        @Html.ActionLink(_.culture, "Index", "ResourceForm", new { culture = _.culture }, null)
+                            break;
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@if (Model.Result == 1)
+{
+    <div class="success">@T("You have created resource request")</div>
+}
+@using (Html.BeginFormAntiForgeryPost(null, FormMethod.Post, new { id = "__ResourceRequestForm" }))
+{
+    @Html.HiddenFor(m => m.actualLanguage)
+    <h1>@T("Resource Reservation Request")</h1><br />
+    <h3>@T("Applicant")</h3>
+    <table class="summary">
+        <tr>
+            <td>@T("Name and surname / business name")</td>
+            <td>@Html.EditorFor(m => m.Name)</td>
+            <td>
+                @if (ViewContext.ViewData.ModelState.ContainsKey("Name") && ViewContext.ViewData.ModelState["Name"].Errors.Count > 0)
+            {
+                <span class="error">@T("Please fill out this required field")</span>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td>@T("Web Page URL")</td>
+        <td>@Html.EditorFor(m => m.URL)</td>
+        <td>
+            @if (ViewContext.ViewData.ModelState.ContainsKey("URL") && ViewContext.ViewData.ModelState["URL"].Errors.Count > 0)
+                {
+                <span class="error">@T("Please fill out this required field")</span>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td>@T("E-mail")</td>
+        <td>@Html.EditorFor(m => m.Email)</td>
+        <td>
+            @if (ViewContext.ViewData.ModelState.ContainsKey("Email") && ViewContext.ViewData.ModelState["Email"].Errors.Count > 0)
+                {
+                <span class="error">@T("Invalid email address")</span>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td>@T("Phone")</td>
+        <td>@Html.EditorFor(m => m.Phone)</td>
+        <td>
+            @if (ViewContext.ViewData.ModelState.ContainsKey("Phone") && ViewContext.ViewData.ModelState["Phone"].Errors.Count > 0)
+                {
+                <span class="error"> @T("Please fill out this required field")</span>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td>@T("Business Area")</td>
+        <td>@Html.TextAreaFor(m => m.BusinessSubject, new { cols = "35", rows = "3" })</td>
+        <td>
+            @if (ViewContext.ViewData.ModelState.ContainsKey("BusinessSubject") && ViewContext.ViewData.ModelState["BusinessSubject"].Errors.Count > 0)
+                {
+                <span class="error">@T("Please fill out this required field")</span>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td>@T("Period Required")</td>
+        <td>@Html.TextAreaFor(m => m.Period, new { cols = "35", rows = "3" })</td>
+    </tr>
+    <tr>
+        <td>@T("Request Description")</td>
+        <td>@Html.TextAreaFor(m => m.Description, new { cols = "35", rows = "3" })</td>
+    </tr>
+</table>
+
+    <br />
+    <h3>@T("List Of Requested Resources")</h3>
+    if (Model.AddedResources.Count > 0)
+    {
+        <table id="resources" class="resources">
+            <tr>
+                <th>@T("Resource")</th>
+                <th>@T("Requested Count")</th>
+                <th>@T("Available Capacity")</th>
+                <th>@T("Available Externally")</th>
+                <th></th>
+            </tr>
+            @for (int i = 0; i < Model.AddedResources.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Html.HiddenFor(m => m.AddedResources[i].Id) @Html.HiddenFor(m => m.AddedResources[i].Name)
+                        <strong>@Html.DisplayFor(m => m.AddedResources[i].Name)</strong>
+                    </td>
+                    <td>
+                        <span class="count">@Html.TextBoxFor(m => m.AddedResources[i].Count, new { @class = "count" })</span>
+                        @if (Model.AddedResources[i].emailList != null)
+                        {
+                            for (int k = 0; k < Model.AddedResources[i].emailList.Count; k++)
+                            {
+                                @Html.HiddenFor(m => m.AddedResources[i].emailList[k])
+                            }
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => m.AddedResources[i].AvailableCapacity)
+                        @Html.HiddenFor(m => m.AddedResources[i].AvailableCapacity)
+                    </td>
+                    <td>
+                        @(Model.AddedResources[i].IsAvailableExternally ? @T("Yes") : @T("No"))
+                        @Html.HiddenFor(m => m.AddedResources[i].IsAvailableExternally)
+                    </td>
+                    <td><input type="submit" name="RemoveResource" id="RemoveResource" class="@i" value="@T("Remove")" /></td>
+                </tr>
+            }
+        </table>
+    }
+    else
+    {
+        <p>@T("No resources included.")</p>
+    }
+
+    <br /><br />
+    <h3>@T("Add Resource To List")</h3>
+    <table>
+        <tr>
+            <td>@Html.DropDownListFor(m => m.ResourceToAdd.ResourceType, Model.ResourceToAdd.ResourceTypesList)</td>
+            <td>@Html.DropDownListFor(m => m.ResourceToAdd.ResourceName, Model.ResourceToAdd.ResourceNamesList)<span id="dropDownLoader"></span></td>
+            <td>
+                @T("Requested Count")
+                <span class="count">@Html.EditorFor(m => m.ResourceToAdd.Count, new { @class = "count" })</span>
+            </td>
+            <td>
+                @if (Model.ResourceToAdd.ResourceNamesList.Count > 0)
+                {
+                    <input type="submit" name="AddResource" id="AddResource" value="@T("Add")" width="30px" />
+                }
+                else
+                {
+                    <input type="submit" name="AddResource" disabled="disabled" id="AddResource" value="@T("Add")" />
+                }
+            </td>
+        </tr>
+    </table>
+    <br />
+    <br />
+    if (!User.Identity.IsAuthenticated || Model.ShowIfLogged)
+    {
+        <div>
+        @{
+            using (Script.Head())
+            {
+                <script type="text/javascript">
+                    var RecaptchaOptions = { theme: 'clean' };
+                </script>
+            }
+        }
+                <script type="text/javascript" src="//www.google.com/recaptcha/api/challenge?k=@Model.PublicKey"></script>
+                
+
+            <noscript>
+                <iframe src="//www.google.com/recaptcha/api/noscript?k=@Model.PublicKey" height="300" width="500" frameborder="0"></iframe><br>
+                <textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
+                <input type="hidden" name="recaptcha_response_field" value="manual_challenge">
+            </noscript>
+            @if (ViewContext.ViewData.ModelState.ContainsKey("Captcha") && ViewContext.ViewData.ModelState["Captcha"].Errors.Count > 0) {
+                 <span class="error">@T("You did not type the verification word correctly. Please try again.")</span>
+             }
+            </div>
+    }
+    
+    <input type="Submit" value="@T("Submit Resource Reservation Request")" name="Send">
+}
+
+

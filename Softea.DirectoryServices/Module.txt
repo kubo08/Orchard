@@ -1,0 +1,12 @@
+﻿Name: Directory Services
+AntiForgery: enabled
+Author: Softea
+Website: 
+Version: 1.0
+OrchardVersion: 1.0
+Description: Enables synchronization users with active directory
+Features:
+    Softea.DirectoryServices:
+        Description: Module for synchronization users with active directory and active directory athentication
+		Category: AgroBioTech
+		Dependencies: Orchard.Users, Orchard.Localization, Orchard.MediaLibrary

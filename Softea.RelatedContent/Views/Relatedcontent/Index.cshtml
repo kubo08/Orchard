@@ -1,0 +1,30 @@
+﻿@using System
+@model Softea.RelatedContent.ViewModels.PropertyFieldsViewModel
+
+    @Html.Hidden("FieldsCount", Model.Fields.Count)
+@for (int i = 0; i < Model.Fields.Count; i++)
+{
+    <div style="float:left; width:90%;">
+
+        @*@Html.DropDownListFor(m => m.Fields[i].RelatedcontentType, Model.Fields[i].possibleContentTypesListItems, "Select content type", new { })*@
+        @Html.DropDownList(String.Format("{0}Fields[{1}].RelatedcontentType", Model.Preffix, i), Model.Fields[i].possibleContentTypesListItems, "Select content type")
+
+        @T("Field in content type:")
+        @*@Html.TextBoxFor(m => m.Fields[i].RelatedContentFields)*@
+        
+        @Html.TextBox(String.Format("{0}Fields[{1}].RelatedContentFields", Model.Preffix,i), Model.Fields[i].RelatedContentFields)
+
+        @Html.ValidationMessageFor(m => m.Fields[i].RelatedcontentType)
+        @T("Display name:")
+        @*@Html.TextBoxFor(m => m.Fields[i].DisplayName)*@
+        @Html.TextBox(String.Format("{0}Fields[{1}].DisplayName", Model.Preffix, i), Model.Fields[i].DisplayName)
+    </div>
+    if (Model.Fields.Count > 1)
+    {
+        <div class="link" style="float: right">
+            <span class="@i" id="Remove">Remove</span>
+        </div>
+    }
+
+    <br style="clear:both;" />
+}

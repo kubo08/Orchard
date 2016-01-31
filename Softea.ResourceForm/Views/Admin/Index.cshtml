@@ -1,0 +1,10 @@
+﻿@model Softea.ResourceForm.Models.ResourceFormPart
+@{
+    Layout.Title = T("Resource Form").ToString();
+}
+
+@using (Html.BeginFormAntiForgeryPost()) {
+    @Html.TextBoxFor(i=>i.MasterEmail)
+    
+    <input type="submit" value="Save"/>
+}
